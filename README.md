@@ -1,6 +1,6 @@
 # cocoapods-dependencies
 
-A description of cocoapods-dependencies.
+Shows a project's CocoaPod dependency graph.
 
 ## Installation
 
@@ -8,4 +8,4 @@ A description of cocoapods-dependencies.
 
 ## Usage
 
-    $ pod spec dependencies POD_NAME
+    $ pod dependencies

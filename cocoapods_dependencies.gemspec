@@ -5,12 +5,12 @@ require 'cocoapods_dependencies.rb'
 
 Gem::Specification.new do |spec|
   spec.name          = "cocoapods-dependencies"
-  spec.version       = CocoapodsDependencies::VERSION
+  spec.version       = Pod::Dependencies::VERSION
   spec.authors       = ["Samuel E. Giddins"]
   spec.email         = ["segiddins@segiddins.me"]
-  spec.description   = %q{A short description of cocoapods-dependencies.}
-  spec.summary       = %q{A longer description of cocoapods-dependencies.}
-  spec.homepage      = "https://github.com/EXAMPLE/cocoapods-dependencies"
+  spec.description   = %q{Shows a project's CocoaPod dependency graph.}
+  spec.summary       = %q{Shows a project's CocoaPod dependency graph.}
+  spec.homepage      = "https://github.com/segiddins/cocoapods-dependencies"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)

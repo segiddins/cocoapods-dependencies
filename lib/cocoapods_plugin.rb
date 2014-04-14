@@ -1,1 +1,1 @@
-require 'pod/command/spec/dependencies'
+require 'pod/command/dependencies'

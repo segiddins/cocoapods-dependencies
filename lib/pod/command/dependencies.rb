@@ -32,7 +32,7 @@ module Pod
             config.podfile,
             @ignore_lockfile ? nil : config.lockfile
           )
-          specs = analyzer.analyze(false).specs_by_target.values.flatten(1)
+          specs = analyzer.analyze(true).specs_by_target.values.flatten(1)
           lockfile = Lockfile.generate(config.podfile, specs)
           pods = lockfile.to_hash['PODS']
         end

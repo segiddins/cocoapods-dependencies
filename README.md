@@ -7,8 +7,13 @@ Shows a project's CocoaPod dependency graph.
 
 ## Installation
 
-    $ gem install cocoapods-dependencies
+```bash
+$ [sudo] gem install cocoapods-dependencies
+```
 
 ## Usage
 
-    $ pod dependencies
+```bash
+$ pod dependencies
+```bash
+

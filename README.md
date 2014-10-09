@@ -7,8 +7,14 @@ Shows a project's CocoaPod dependency graph.
 
 ## Installation
 
-    $ gem install cocoapods-dependencies
+`cocoapods-dependencies` itself installs through RubyGems, the Ruby package manager. 
+
+Using the default Ruby install will require you to use sudo when installing gems. Install it by performing the following command:
+
+    $ sudo gem install cocoapods-dependencies
 
 ## Usage
 
     $ pod dependencies
+
+

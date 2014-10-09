@@ -7,8 +7,18 @@ module Pod
         Shows the project's dependency graph.
       DESC
 
+      def self.options
+        [
+          ['--ignore-lockfile', 'whether the lockfile should be ignored when calculating the dependency graph'],
+        ].concat(super)
+      end
+
+      def initialize(argv)
+        @ignore_lockfile = argv.flag?('ignore-lockfile', false)
+        super
+      end
+
       def run
-        verify_podfile_exists!
         UI.section 'Project Dependencies' do
           STDOUT.puts dependencies.to_yaml
         end
@@ -16,10 +26,14 @@ module Pod
 
       def dependencies
         @dependencies ||= begin
-          podfile = config.podfile
-          resolver = Resolver.new(config.sandbox, podfile, config.lockfile.dependencies)
-          specs = resolver.resolve.values.flatten(1).uniq
-          lockfile = Lockfile.generate(podfile, specs)
+          verify_podfile_exists!
+          analyzer = Installer::Analyzer.new(
+            config.sandbox,
+            config.podfile,
+            @ignore_lockfile ? nil : config.lockfile
+          )
+          specs = analyzer.analyze(false).specs_by_target.values.flatten(1)
+          lockfile = Lockfile.generate(config.podfile, specs)
           pods = lockfile.to_hash['PODS']
         end
       end

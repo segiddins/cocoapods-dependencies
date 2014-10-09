@@ -15,5 +15,4 @@ $ [sudo] gem install cocoapods-dependencies
 
 ```bash
 $ pod dependencies
-```bash
-
+```

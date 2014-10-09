@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cocoapods-dependencies (0.0.1)
+    cocoapods-dependencies (0.2.0)
 
 GEM
   remote: https://rubygems.org/

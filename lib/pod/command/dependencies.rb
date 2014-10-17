@@ -9,18 +9,20 @@ module Pod
 
       def self.options
         [
-          ['--ignore-lockfile', 'whether the lockfile should be ignored when calculating the dependency graph'],
+          ['--ignore-lockfile', 'Whether the lockfile should be ignored when calculating the dependency graph'],
+          ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
         ].concat(super)
       end
 
       def initialize(argv)
         @ignore_lockfile = argv.flag?('ignore-lockfile', false)
+        @repo_update = argv.flag?('repo-update', false)
         super
       end
 
       def run
-        UI.section 'Project Dependencies' do
-          STDOUT.puts dependencies.to_yaml
+        UI.title 'Project Dependencies' do
+          UI.puts dependencies.to_yaml
         end
       end
 
@@ -32,7 +34,7 @@ module Pod
             config.podfile,
             @ignore_lockfile ? nil : config.lockfile
           )
-          specs = analyzer.analyze(true).specs_by_target.values.flatten(1)
+          specs = analyzer.analyze(@repo_update).specs_by_target.values.flatten(1)
           lockfile = Lockfile.generate(config.podfile, specs)
           pods = lockfile.to_hash['PODS']
         end

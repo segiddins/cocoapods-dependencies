@@ -34,7 +34,11 @@ module Pod
             config.podfile,
             @ignore_lockfile ? nil : config.lockfile
           )
-          specs = analyzer.analyze(@repo_update).specs_by_target.values.flatten(1)
+          config.integrate_targets.tap do |it|
+            config.integrate_targets = false
+            specs = analyzer.analyze(@repo_update).specs_by_target.values.flatten(1)
+            config.integrate_targets = it
+          end
           lockfile = Lockfile.generate(config.podfile, specs)
           pods = lockfile.to_hash['PODS']
         end

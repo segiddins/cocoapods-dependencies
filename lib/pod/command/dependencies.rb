@@ -14,34 +14,79 @@ module Pod
         ].concat(super)
       end
 
+      def self.arguments
+        [
+          CLAide::Argument.new('PODSPEC', false)
+        ].concat(super)
+      end
+
       def initialize(argv)
+        @podspec_name = argv.shift_argument
         @ignore_lockfile = argv.flag?('ignore-lockfile', false)
         @repo_update = argv.flag?('repo-update', false)
         super
       end
 
+      def validate!
+        super
+        if @podspec_name
+          require 'pathname'
+          path = Pathname.new(@podspec_name)
+          if path.exist?
+            @podspec = Specification.from_file(path)
+          else
+            @podspec = SourcesManager.
+              search(Dependency.new(@podspec_name)).
+              specification.
+              subspec_by_name(@podspec_name)
+          end
+        end
+      end
+
       def run
-        UI.title 'Project Dependencies' do
+        UI.title 'Dependencies' do
           UI.puts dependencies.to_yaml
         end
       end
 
       def dependencies
         @dependencies ||= begin
-          verify_podfile_exists!
           analyzer = Installer::Analyzer.new(
-            config.sandbox,
-            config.podfile,
+            sandbox,
+            podfile,
             @ignore_lockfile ? nil : config.lockfile
           )
-          config.integrate_targets.tap do |it|
-            config.integrate_targets = false
-            specs = analyzer.analyze(@repo_update).specs_by_target.values.flatten(1)
-            config.integrate_targets = it
-          end
-          lockfile = Lockfile.generate(config.podfile, specs)
+
+          integrate_targets = config.integrate_targets
+          config.integrate_targets = false
+          specs = analyzer.analyze(@repo_update).specs_by_target.values.flatten(1)
+          config.integrate_targets = integrate_targets
+
+          lockfile = Lockfile.generate(podfile, specs)
           pods = lockfile.to_hash['PODS']
         end
+      end
+
+      def podfile
+        @podfile ||= begin
+          if podspec = @podspec
+            platform = podspec.available_platforms.first
+            platform_name, platform_version = platform.name, platform.deployment_target.to_s
+            sources = SourcesManager.all.map(&:url)
+            Podfile.new do
+              sources.each { |s| source s }
+              platform platform_name, platform_version
+              pod podspec.name
+            end
+          else
+            verify_podfile_exists!
+            config.podfile
+          end
+        end
+      end
+
+      def sandbox
+        @podspec ? Sandbox.new(Dir.mktmpdir) : config.sandbox
       end
 
     end

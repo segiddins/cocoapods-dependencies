@@ -86,7 +86,12 @@ module Pod
       end
 
       def sandbox
-        @podspec ? Sandbox.new(Dir.mktmpdir) : config.sandbox
+        if @podspec
+          require 'tmpdir'
+          Sandbox.new(Dir.mktmpdir)
+        else
+          config.sandbox
+        end
       end
 
     end

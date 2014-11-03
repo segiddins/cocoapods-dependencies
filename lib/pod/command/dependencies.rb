@@ -45,6 +45,7 @@ module Pod
 
       def run
         UI.title 'Dependencies' do
+          require 'yaml'
           UI.puts dependencies.to_yaml
         end
       end

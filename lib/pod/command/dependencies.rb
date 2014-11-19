@@ -63,7 +63,7 @@ module Pod
           specs = analyzer.analyze(@repo_update).specs_by_target.values.flatten(1)
           config.integrate_targets = integrate_targets
 
-          lockfile = Lockfile.generate(podfile, specs)
+          lockfile = Lockfile.generate(podfile, specs, {})
           pods = lockfile.to_hash['PODS']
         end
       end

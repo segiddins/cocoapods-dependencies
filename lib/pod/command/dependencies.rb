@@ -55,13 +55,16 @@ module Pod
           analyzer = Installer::Analyzer.new(
             sandbox,
             podfile,
-            @ignore_lockfile ? nil : config.lockfile
+            @ignore_lockfile || @podspec ? nil : config.lockfile
           )
 
           integrate_targets = config.integrate_targets
+          skip_repo_update = config.skip_repo_update?
           config.integrate_targets = false
-          specs = analyzer.analyze(@repo_update).specs_by_target.values.flatten(1)
+          config.skip_repo_update = !@repo_update
+          specs = analyzer.analyze(@repo_update || @podspec).specs_by_target.values.flatten(1)
           config.integrate_targets = integrate_targets
+          config.skip_repo_update = skip_repo_update
 
           lockfile = Lockfile.generate(podfile, specs, {})
           pods = lockfile.to_hash['PODS']
@@ -77,7 +80,7 @@ module Pod
             Podfile.new do
               sources.each { |s| source s }
               platform platform_name, platform_version
-              pod podspec.name
+              pod podspec.name, podspec: podspec.defined_in_file
             end
           else
             verify_podfile_exists!

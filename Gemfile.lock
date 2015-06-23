@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     cocoapods-dependencies (0.4.1)
-      ruby-graphviz
+      ruby-graphviz (~> 1.2)
 
 GEM
   remote: https://rubygems.org/

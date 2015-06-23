@@ -1,6 +1,3 @@
-require 'graphviz'
-require 'yaml'
-
 module Pod
   class Command
     class Dependencies < Command
@@ -15,7 +12,7 @@ module Pod
           ['--ignore-lockfile', 'Whether the lockfile should be ignored when calculating the dependency graph'],
           ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
           ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
-          ['--image', 'Outputs the dependency graph as an image to <podsepc name>.png or Podfile.png']
+          ['--image', 'Outputs the dependency graph as an image to <podsepc name>.png or Podfile.png'],
         ].concat(super)
       end
 
@@ -51,6 +48,8 @@ module Pod
       end
 
       def run
+        require 'graphviz'
+        require 'yaml'
         graphviz_image_output if @produce_image_output
         graphviz_dot_output if @produce_graphviz_output
         yaml_output
@@ -109,7 +108,7 @@ module Pod
           graph = GraphViz::new(output_file_basename, :type => :digraph)
           root = graph.add_node(output_file_basename)
           
-          if !@podspec
+          unless @podspec
             podfile_dependencies.each do |pod|
               pod_node = graph.add_node(pod)
               graph.add_edge(root, pod_node)
@@ -131,7 +130,7 @@ module Pod
       # Truncates the input string after a pod's name removing version requirements, etc.
       def sanitized_pod_name(name)
         match = /([\w_\/]+)( \(.*\))?/.match(name)
-        match ? match[1] : "#{name}"
+        match ? match[1] : name
       end
       
       # Returns a Set of Strings of the names of dependencies specified in the Podfile. 
@@ -146,7 +145,7 @@ module Pod
       
       # Returns a [String: [String]] containing resolved mappings from the name of a pod to an array of the names of its dependencies.
       def pod_to_dependencies
-        dependencies.map { |d| d.is_a?(Hash) ? d : { d => [] } }.reduce(Hash[]) { |combined, individual| combined.merge!(individual) }
+        dependencies.map { |d| d.is_a?(Hash) ? d : { d => [] } }.reduce({}) { |combined, individual| combined.merge!(individual) }
       end
       
       # Basename to use for output files.

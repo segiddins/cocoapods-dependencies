@@ -14,8 +14,8 @@ module Pod
         [
           ['--ignore-lockfile', 'Whether the lockfile should be ignored when calculating the dependency graph'],
           ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
-          ['--graphviz', 'Outputs the dependency graph in Graphviz format to Podfile.gv'],
-          ['--image', 'Outputs the dependency graph as an image to Podfile.png']
+          ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
+          ['--image', 'Outputs the dependency graph as an image to <podsepc name>.png or Podfile.png']
         ].concat(super)
       end
 

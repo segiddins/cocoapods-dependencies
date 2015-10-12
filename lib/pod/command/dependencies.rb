@@ -52,7 +52,6 @@ module Pod
       end
 
       def run
-        require 'graphviz'
         require 'yaml'
         graphviz_image_output if @produce_image_output
         graphviz_dot_output if @produce_graphviz_output
@@ -106,19 +105,20 @@ module Pod
           config.sandbox
         end
       end
-      
+
       def graphviz_data
         @graphviz ||= begin
+          require 'graphviz'
           graph = GraphViz::new(output_file_basename, :type => :digraph)
           root = graph.add_node(output_file_basename)
-          
+
           unless @podspec
             podfile_dependencies.each do |pod|
               pod_node = graph.add_node(pod)
               graph.add_edge(root, pod_node)
             end
           end
-          
+
           pod_to_dependencies.each do |pod, dependencies|
             pod_node = graph.add_node(sanitized_pod_name(pod))
             dependencies.each do |dependency|
@@ -126,48 +126,48 @@ module Pod
               graph.add_edge(pod_node, dep_node)
             end
           end
-          
+
           graph
         end
       end
-      
+
       # Truncates the input string after a pod's name removing version requirements, etc.
       def sanitized_pod_name(name)
         match = /([\w_\/]+)( \(.*\))?/.match(name)
         match ? match[1] : name
       end
-      
-      # Returns a Set of Strings of the names of dependencies specified in the Podfile. 
+
+      # Returns a Set of Strings of the names of dependencies specified in the Podfile.
       def podfile_dependencies
         Set.new(podfile.target_definitions.values.map { |t| t.dependencies.map { |d| d.name } }.flatten)
       end
-      
+
       # Returns a [String] of the names of dependencies specified in the podspec.
       def podspec_dependencies
         @podspec.all_dependencies.map { |d| d.name }
       end
-      
+
       # Returns a [String: [String]] containing resolved mappings from the name of a pod to an array of the names of its dependencies.
       def pod_to_dependencies
         dependencies.map { |d| d.is_a?(Hash) ? d : { d => [] } }.reduce({}) { |combined, individual| combined.merge!(individual) }
       end
-      
+
       # Basename to use for output files.
       def output_file_basename
         return 'Podfile' unless @podspec_name
         File.basename(@podspec_name, File.extname(@podspec_name))
       end
-      
+
       def yaml_output
         UI.title 'Dependencies' do
           UI.puts dependencies.to_yaml
         end
       end
-      
+
       def graphviz_image_output
         graphviz_data.output( :png => "#{output_file_basename}.png")
       end
-      
+
       def graphviz_dot_output
         graphviz_data.output( :dot => "#{output_file_basename}.gv")
       end

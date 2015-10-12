@@ -45,6 +45,10 @@ module Pod
               subspec_by_name(@podspec_name)
           end
         end
+        if (@produce_image_output || @produce_graphviz_output) && Executable.which('dot').nil?
+          raise Informative, 'GraphViz must be installed and `dot` must be in ' \
+            '$PATH to produce image or graphviz output.'
+        end
       end
 
       def run

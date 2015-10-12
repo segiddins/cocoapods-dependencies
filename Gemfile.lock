@@ -7,7 +7,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    rake (10.2.2)
+    rake (10.4.2)
     ruby-graphviz (1.2.2)
 
 PLATFORMS
@@ -19,4 +19,4 @@ DEPENDENCIES
   rake
 
 BUNDLED WITH
-   1.10.5
+   1.10.6

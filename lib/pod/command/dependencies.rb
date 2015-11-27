@@ -133,8 +133,7 @@ module Pod
 
       # Truncates the input string after a pod's name removing version requirements, etc.
       def sanitized_pod_name(name)
-        match = /([\w_\/]+)( \(.*\))?/.match(name)
-        match ? match[1] : name
+        Pod::Dependency.from_string(name).name
       end
 
       # Returns a Set of Strings of the names of dependencies specified in the Podfile.

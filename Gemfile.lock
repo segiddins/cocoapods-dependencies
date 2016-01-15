@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cocoapods-dependencies (0.5.2)
+    cocoapods-dependencies (1.0.0.beta.1)
       ruby-graphviz (~> 1.2)
 
 GEM
@@ -19,4 +19,4 @@ DEPENDENCIES
   rake
 
 BUNDLED WITH
-   1.10.6
+   1.11.2

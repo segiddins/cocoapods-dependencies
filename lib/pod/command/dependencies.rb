@@ -14,7 +14,7 @@ module Pod
           ['--ignore-lockfile', 'Whether the lockfile should be ignored when calculating the dependency graph'],
           ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
           ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
-          ['--image', 'Outputs the dependency graph as an image to <podsepc name>.png or Podfile.png'],
+          ['--image', 'Outputs the dependency graph as an image to <podspec name>.png or Podfile.png'],
         ].concat(super)
       end
 
@@ -38,8 +38,17 @@ module Pod
         if @podspec_name
           require 'pathname'
           path = Pathname.new(@podspec_name)
-          raise "Cannot find #{@podspec_name}." unless path.exist?
-          @podspec = Specification.from_file(path)
+          if path.file?
+            @podspec = Specification.from_file(path)
+          else
+            sets = Config.
+              instance.
+              sources_manager.
+              search(Dependency.new(@podspec_name))
+            spec = sets && sets.specification
+            @podspec = spec && spec.subspec_by_name(@podspec_name)
+            raise Informative, "Cannot find `#{@podspec_name}`." unless @podspec
+          end
         end
         if (@produce_image_output || @produce_graphviz_output) && Executable.which('dot').nil?
           raise Informative, 'GraphViz must be installed and `dot` must be in ' \
@@ -49,6 +58,9 @@ module Pod
 
       def run
         require 'yaml'
+        UI.title "Calculating dependencies" do
+          dependencies
+        end
         graphviz_image_output if @produce_image_output
         graphviz_dot_output if @produce_graphviz_output
         yaml_output
@@ -77,7 +89,7 @@ module Pod
             platform = podspec.available_platforms.first
             platform_name = platform.name
             platform_version = platform.deployment_target.to_s
-            source_urls = Config.instance.sources_manager.all.map(&:url).join(',').split(',')
+            source_urls = Config.instance.sources_manager.all.map(&:url).compact
             Podfile.new do
               install! 'cocoapods', integrate_targets: false, warn_for_multiple_pod_sources: false
               source_urls.each { |u| source(u) }
@@ -149,7 +161,7 @@ module Pod
 
       def yaml_output
         UI.title 'Dependencies' do
-          UI.puts dependencies.to_yaml
+          UI.puts YAML.dump(dependencies)
         end
       end
 

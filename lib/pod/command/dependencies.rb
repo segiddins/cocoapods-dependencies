@@ -38,14 +38,8 @@ module Pod
         if @podspec_name
           require 'pathname'
           path = Pathname.new(@podspec_name)
-          if path.exist?
-            @podspec = Specification.from_file(path)
-          else
-            @podspec = SourcesManager.
-              search(Dependency.new(@podspec_name)).
-              specification.
-              subspec_by_name(@podspec_name)
-          end
+          raise "Cannot find #{@podspec_name}." unless path.exist?
+          @podspec = Specification.from_file(path)
         end
         if (@produce_image_output || @produce_graphviz_output) && Executable.which('dot').nil?
           raise Informative, 'GraphViz must be installed and `dot` must be in ' \
@@ -73,7 +67,7 @@ module Pod
           end
 
           lockfile = Lockfile.generate(podfile, specs, {})
-          pods = lockfile.to_hash['PODS']
+          lockfile.to_hash['PODS']
         end
       end
 
@@ -81,13 +75,15 @@ module Pod
         @podfile ||= begin
           if podspec = @podspec
             platform = podspec.available_platforms.first
-            platform_name, platform_version = platform.name, platform.deployment_target.to_s
-            sources = SourcesManager.all.map(&:url)
+            platform_name = platform.name
+            platform_version = platform.deployment_target.to_s
+            source_urls = Config.instance.sources_manager.all.map(&:url).join(',').split(',')
             Podfile.new do
-              install! :cocoapods, integrate_targets: false
-              sources.each { |s| source s }
+              install! 'cocoapods', integrate_targets: false, warn_for_multiple_pod_sources: false
+              source_urls.each { |u| source(u) }
               platform platform_name, platform_version
               pod podspec.name, podspec: podspec.defined_in_file
+              target 'Dependencies'
             end
           else
             verify_podfile_exists!
@@ -138,11 +134,6 @@ module Pod
       # Returns a Set of Strings of the names of dependencies specified in the Podfile.
       def podfile_dependencies
         Set.new(podfile.target_definitions.values.map { |t| t.dependencies.map { |d| d.name } }.flatten)
-      end
-
-      # Returns a [String] of the names of dependencies specified in the podspec.
-      def podspec_dependencies
-        @podspec.all_dependencies.map { |d| d.name }
       end
 
       # Returns a [String: [String]] containing resolved mappings from the name of a pod to an array of the names of its dependencies.

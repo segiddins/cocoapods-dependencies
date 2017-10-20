@@ -14,7 +14,7 @@ module Pod
           ['--ignore-lockfile', 'Whether the lockfile should be ignored when calculating the dependency graph'],
           ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
           ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
-          ['--image', 'Outputs the dependency graph as an image to <podsepc name>.png or Podfile.png'],
+          ['--image', 'Outputs the dependency graph as an image to <podspec name>.png or Podfile.png'],
         ].concat(super)
       end
 
@@ -38,13 +38,16 @@ module Pod
         if @podspec_name
           require 'pathname'
           path = Pathname.new(@podspec_name)
-          if path.exist?
+          if path.file?
             @podspec = Specification.from_file(path)
           else
-            @podspec = SourcesManager.
-              search(Dependency.new(@podspec_name)).
-              specification.
-              subspec_by_name(@podspec_name)
+            sets = Config.
+              instance.
+              sources_manager.
+              search(Dependency.new(@podspec_name))
+            spec = sets && sets.specification
+            @podspec = spec && spec.subspec_by_name(@podspec_name)
+            raise Informative, "Cannot find `#{@podspec_name}`." unless @podspec
           end
         end
         if (@produce_image_output || @produce_graphviz_output) && Executable.which('dot').nil?
@@ -55,6 +58,9 @@ module Pod
 
       def run
         require 'yaml'
+        UI.title "Calculating dependencies" do
+          dependencies
+        end
         graphviz_image_output if @produce_image_output
         graphviz_dot_output if @produce_graphviz_output
         yaml_output
@@ -73,7 +79,7 @@ module Pod
           end
 
           lockfile = Lockfile.generate(podfile, specs, {})
-          pods = lockfile.to_hash['PODS']
+          lockfile.to_hash['PODS']
         end
       end
 
@@ -81,13 +87,15 @@ module Pod
         @podfile ||= begin
           if podspec = @podspec
             platform = podspec.available_platforms.first
-            platform_name, platform_version = platform.name, platform.deployment_target.to_s
-            sources = SourcesManager.all.map(&:url)
+            platform_name = platform.name
+            platform_version = platform.deployment_target.to_s
+            source_urls = Config.instance.sources_manager.all.map(&:url).compact
             Podfile.new do
-              install! :cocoapods, integrate_targets: false
-              sources.each { |s| source s }
+              install! 'cocoapods', integrate_targets: false, warn_for_multiple_pod_sources: false
+              source_urls.each { |u| source(u) }
               platform platform_name, platform_version
               pod podspec.name, podspec: podspec.defined_in_file
+              target 'Dependencies'
             end
           else
             verify_podfile_exists!
@@ -140,11 +148,6 @@ module Pod
         Set.new(podfile.target_definitions.values.map { |t| t.dependencies.map { |d| d.name } }.flatten)
       end
 
-      # Returns a [String] of the names of dependencies specified in the podspec.
-      def podspec_dependencies
-        @podspec.all_dependencies.map { |d| d.name }
-      end
-
       # Returns a [String: [String]] containing resolved mappings from the name of a pod to an array of the names of its dependencies.
       def pod_to_dependencies
         dependencies.map { |d| d.is_a?(Hash) ? d : { d => [] } }.reduce({}) { |combined, individual| combined.merge!(individual) }
@@ -158,7 +161,7 @@ module Pod
 
       def yaml_output
         UI.title 'Dependencies' do
-          UI.puts dependencies.to_yaml
+          UI.puts YAML.dump(dependencies)
         end
       end
 

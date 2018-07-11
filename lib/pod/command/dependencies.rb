@@ -68,17 +68,22 @@ module Pod
 
       def dependencies
         @dependencies ||= begin
-          analyzer = Installer::Analyzer.new(
-            sandbox,
-            podfile,
-            @ignore_lockfile || @podspec ? nil : config.lockfile
-          )
+          lockfile = config.lockfile unless @ignore_lockfile || @podspec
 
-          specs = config.with_changes(skip_repo_update: !@repo_update) do
-            analyzer.analyze(@repo_update || @podspec).specs_by_target.values.flatten(1)
+          if !lockfile || @repo_update
+            analyzer = Installer::Analyzer.new(
+              sandbox,
+              podfile,
+              lockfile
+            )
+
+            specs = config.with_changes(skip_repo_update: !@repo_update) do
+              analyzer.analyze(@repo_update || @podspec).specs_by_target.values.flatten(1)
+            end
+
+            lockfile = Lockfile.generate(podfile, specs, {})
           end
 
-          lockfile = Lockfile.generate(podfile, specs, {})
           lockfile.to_hash['PODS']
         end
       end
@@ -161,7 +166,7 @@ module Pod
 
       def yaml_output
         UI.title 'Dependencies' do
-          UI.puts YAML.dump(dependencies)
+          UI.puts YAMLHelper.convert(dependencies)
         end
       end
 

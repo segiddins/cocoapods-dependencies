@@ -8,7 +8,6 @@ Gem::Specification.new do |spec|
   spec.version       = Pod::Dependencies::VERSION
   spec.authors       = ["Samuel E. Giddins"]
   spec.email         = ["segiddins@segiddins.me"]
-  spec.description   = %q{Shows a project's CocoaPods dependency graph.}
   spec.summary       = %q{Shows a project's CocoaPods dependency graph.}
   spec.homepage      = "https://github.com/segiddins/cocoapods-dependencies"
   spec.license       = "MIT"

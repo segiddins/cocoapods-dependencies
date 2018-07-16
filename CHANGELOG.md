@@ -1,5 +1,16 @@
 # CocoaPods Dependencies Changelog
 
+## Master
+
+##### Enhancements
+
+* None.  
+
+##### Bug Fixes
+
+* None.  
+
+
 ## 1.2.0 (2018-07-16)
 
 ##### Enhancements

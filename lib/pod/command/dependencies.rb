@@ -15,7 +15,7 @@ module Pod
           ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
           ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
           ['--image', 'Outputs the dependency graph as an image to <podspec name>.png or Podfile.png'],
-          ['--use-real-targets', 'Uses the real targets from the Podfile'],
+          ['--use-podfile-targets', 'Uses targets from the Podfile'],
         ].concat(super)
       end
 
@@ -31,7 +31,7 @@ module Pod
         @repo_update = argv.flag?('repo-update', false)
         @produce_graphviz_output = argv.flag?('graphviz', false)
         @produce_image_output = argv.flag?('image', false)
-        @use_real_targets = argv.flag?('use-real-targets', false)
+        @use_podfile_targets = argv.flag?('use-podfile-targets', false)
         super
       end
 
@@ -125,7 +125,7 @@ module Pod
           require 'graphviz'
           graph = GraphViz::new(output_file_basename, :type => :digraph)
 
-          unless @use_real_targets
+          unless @use_podfile_targets
             root = graph.add_node(output_file_basename)
             unless @podspec
               podfile_dependencies.each do |pod|

@@ -125,15 +125,7 @@ module Pod
           require 'graphviz'
           graph = GraphViz::new(output_file_basename, :type => :digraph)
 
-          unless @use_podfile_targets
-            root = graph.add_node(output_file_basename)
-            unless @podspec
-              podfile_dependencies.each do |pod|
-                pod_node = graph.add_node(pod)
-                graph.add_edge(root, pod_node)
-              end
-            end
-          else
+          if @use_podfile_targets
             unless @podspec
               podfile.target_definitions.values.each do |target|
                 target_node = graph.add_node(target.name.to_s)
@@ -143,6 +135,14 @@ module Pod
                     graph.add_edge(target_node, pod_node)
                   end
                 end
+              end
+            end
+          else
+            root = graph.add_node(output_file_basename)
+            unless @podspec
+              podfile_dependencies.each do |pod|
+                pod_node = graph.add_node(pod)
+                graph.add_edge(root, pod_node)
               end
             end
           end

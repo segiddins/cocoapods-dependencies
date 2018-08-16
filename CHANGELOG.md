@@ -4,7 +4,9 @@
 
 ##### Enhancements
 
-* None.  
+* Add `--use-podfile-targets` flag that allows adding in target names from the
+  podfile to graphviz output.  
+  [Bogdan Poplauschi](https://github.com/bpoplauschi)
 
 ##### Bug Fixes
 

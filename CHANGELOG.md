@@ -1,6 +1,6 @@
 # CocoaPods Dependencies Changelog
 
-## Master
+## 1.3.0 (2018-08-16)
 
 ##### Enhancements
 

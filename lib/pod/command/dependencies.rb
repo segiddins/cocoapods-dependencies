@@ -36,14 +36,8 @@ module Pod
         @use_podfile_targets = argv.flag?('use-podfile-targets', false)
         @ranksep = "0.75"
         @nodesep = "0.25"
-        ranksep = argv.all_options('ranksep').at(0)
-        nodesep = argv.all_options('nodesep').at(0)
-        if !(ranksep.nil?)
-          @ranksep = ranksep
-        end
-        if !(nodesep.nil?)
-          @nodesep = nodesep
-        end
+        @ranksep = argv.option('ranksep', '0.75')
+        @nodesep = argv.option('nodesep', '0.25')
         super
       end
 

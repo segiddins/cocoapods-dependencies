@@ -34,8 +34,6 @@ module Pod
         @produce_graphviz_output = argv.flag?('graphviz', false)
         @produce_image_output = argv.flag?('image', false)
         @use_podfile_targets = argv.flag?('use-podfile-targets', false)
-        @ranksep = "0.75"
-        @nodesep = "0.25"
         @ranksep = argv.option('ranksep', '0.75')
         @nodesep = argv.option('nodesep', '0.25')
         super

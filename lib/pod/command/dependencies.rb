@@ -16,6 +16,8 @@ module Pod
           ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
           ['--image', 'Outputs the dependency graph as an image to <podspec name>.png or Podfile.png'],
           ['--use-podfile-targets', 'Uses targets from the Podfile'],
+          ['--ranksep', 'If you use --image command this command will be useful. The gives desired rank separation, in inches. Example --ranksep=.75, default .75'],
+          ['--nodesep', 'It is same as [--ranksep] command. Minimum space between two adjacent nodes in the same rank, in inches.Example --nodesep=.25, default .25'],
         ].concat(super)
       end
 
@@ -32,6 +34,8 @@ module Pod
         @produce_graphviz_output = argv.flag?('graphviz', false)
         @produce_image_output = argv.flag?('image', false)
         @use_podfile_targets = argv.flag?('use-podfile-targets', false)
+        @ranksep = argv.option('ranksep', '0.75')
+        @nodesep = argv.option('nodesep', '0.25')
         super
       end
 
@@ -123,7 +127,7 @@ module Pod
       def graphviz_data
         @graphviz ||= begin
           require 'graphviz'
-          graph = GraphViz::new(output_file_basename, :type => :digraph)
+          graph = GraphViz::new(output_file_basename, :type => :digraph, :ranksep => @ranksep, :nodesep => @nodesep)
 
           if @use_podfile_targets
             unless @podspec

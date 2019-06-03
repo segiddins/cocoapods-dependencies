@@ -199,7 +199,6 @@ module Pod
 		    File.open("#{output_file_basename}.yaml","w") do |file|
 			    file.write dependencies.to_yaml
 		    end
-
 	    end
 
       def graphviz_image_output

@@ -189,7 +189,7 @@ module Pod
 
       def yaml_output
         UI.title 'Dependencies' do
-          UI.puts YAMLHelper.convert(dependencies)
+          #UI.puts YAMLHelper.convert(dependencies)
         end
       end
 

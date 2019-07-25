@@ -18,6 +18,7 @@ module Pod
           ['--use-podfile-targets', 'Uses targets from the Podfile'],
           ['--ranksep', 'If you use --image command this command will be useful. The gives desired rank separation, in inches. Example --ranksep=.75, default .75'],
           ['--nodesep', 'It is same as [--ranksep] command. Minimum space between two adjacent nodes in the same rank, in inches.Example --nodesep=.25, default .25'],
+          ['--filter-pattern', 'Filters out subtrees from pods with names matching the specified pattern from the --graphviz and --image output. Example --filter-pattern="Tests"'],
         ].concat(super)
       end
 
@@ -36,6 +37,7 @@ module Pod
         @use_podfile_targets = argv.flag?('use-podfile-targets', false)
         @ranksep = argv.option('ranksep', '0.75')
         @nodesep = argv.option('nodesep', '0.25')
+        @filter_pattern = argv.option('filter-pattern', nil)
         super
       end
 
@@ -132,10 +134,12 @@ module Pod
           if @use_podfile_targets
             unless @podspec
               podfile.target_definitions.values.each do |target|
-                target_node = graph.add_node(target.name.to_s)
+                target_node = add_node(graph, target.name.to_s)
+                next if target_node.nil?
                 if target.dependencies
                   target.dependencies.each do |dependency|
-                    pod_node = graph.add_node(dependency.name.to_s)
+                    pod_node = add_node(graph, dependency.name.to_s)
+                    next if pod_node.nil?
                     graph.add_edge(target_node, pod_node)
                   end
                 end
@@ -145,16 +149,19 @@ module Pod
             root = graph.add_node(output_file_basename)
             unless @podspec
               podfile_dependencies.each do |pod|
-                pod_node = graph.add_node(pod)
+                pod_node = add_node(graph, pod)
+                next if pod_node.nil?
                 graph.add_edge(root, pod_node)
               end
             end
           end
 
           pod_to_dependencies.each do |pod, dependencies|
-            pod_node = graph.add_node(sanitized_pod_name(pod))
+            pod_node = add_node(graph, pod)
+            next if pod_node.nil?
             dependencies.each do |dependency|
-              dep_node = graph.add_node(sanitized_pod_name(dependency))
+              dep_node = add_node(graph, dependency)
+              next if dep_node.nil?
               graph.add_edge(pod_node, dep_node)
             end
           end
@@ -163,9 +170,20 @@ module Pod
         end
       end
 
+      def add_node(graph, pod)
+        return nil if filter? pod
+        graph.add_node(sanitized_pod_name(pod))
+      end
+
       # Truncates the input string after a pod's name removing version requirements, etc.
       def sanitized_pod_name(name)
         Pod::Dependency.from_string(name).name
+      end
+
+      def filter?(name)
+        return false unless @filter_pattern
+        @filter_regex ||= Regexp.new(@filter_pattern)
+        @filter_regex.match(name) != nil
       end
 
       # Returns a Set of Strings of the names of dependencies specified in the Podfile.

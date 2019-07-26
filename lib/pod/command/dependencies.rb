@@ -15,6 +15,7 @@ module Pod
           ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
           ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
           ['--image', 'Outputs the dependency graph as an image to <podspec name>.png or Podfile.png'],
+          ['--yaml', 'Outputs the dependency graph in Yaml format to <podspec name>.yaml or Podfile.yaml'],
           ['--use-podfile-targets', 'Uses targets from the Podfile'],
           ['--ranksep', 'If you use --image command this command will be useful. The gives desired rank separation, in inches. Example --ranksep=.75, default .75'],
           ['--nodesep', 'It is same as [--ranksep] command. Minimum space between two adjacent nodes in the same rank, in inches.Example --nodesep=.25, default .25'],
@@ -34,6 +35,7 @@ module Pod
         @repo_update = argv.flag?('repo-update', false)
         @produce_graphviz_output = argv.flag?('graphviz', false)
         @produce_image_output = argv.flag?('image', false)
+        @produce_yaml_output = argv.flag?('yaml', false)
         @use_podfile_targets = argv.flag?('use-podfile-targets', false)
         @ranksep = argv.option('ranksep', '0.75')
         @nodesep = argv.option('nodesep', '0.25')
@@ -71,6 +73,7 @@ module Pod
         end
         graphviz_image_output if @produce_image_output
         graphviz_dot_output if @produce_graphviz_output
+        yaml_file_output if  @produce_yaml_output
         yaml_output
       end
 
@@ -204,9 +207,17 @@ module Pod
 
       def yaml_output
         UI.title 'Dependencies' do
-          UI.puts YAMLHelper.convert(dependencies)
+          #UI.puts YAMLHelper.convert(dependencies)
         end
       end
+
+	    def yaml_file_output
+		    puts output_file_basename
+		    require 'yaml'
+		    File.open("#{output_file_basename}.yaml","w") do |file|
+			    file.write dependencies.to_yaml
+		    end
+	    end
 
       def graphviz_image_output
         graphviz_data.output( :png => "#{output_file_basename}.png")

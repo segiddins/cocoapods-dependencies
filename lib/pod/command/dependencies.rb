@@ -15,10 +15,12 @@ module Pod
           ['--repo-update', 'Fetch external podspecs and run `pod repo update` before calculating the dependency graph'],
           ['--graphviz', 'Outputs the dependency graph in Graphviz format to <podspec name>.gv or Podfile.gv'],
           ['--image', 'Outputs the dependency graph as an image to <podspec name>.png or Podfile.png'],
+          ['--list', 'Outputs the dependencies in a format similar to that of a Podfile.lock'],
           ['--use-podfile-targets', 'Uses targets from the Podfile'],
           ['--ranksep', 'If you use --image command this command will be useful. The gives desired rank separation, in inches. Example --ranksep=.75, default .75'],
           ['--nodesep', 'It is same as [--ranksep] command. Minimum space between two adjacent nodes in the same rank, in inches.Example --nodesep=.25, default .25'],
           ['--filter-pattern', 'Filters out subtrees from pods with names matching the specified pattern from the --graphviz and --image output. Example --filter-pattern="Tests"'],
+          ['--summary', 'Get a dependency graph breakdown by number of inbound and outbound edges'],
         ].concat(super)
       end
 
@@ -34,10 +36,12 @@ module Pod
         @repo_update = argv.flag?('repo-update', false)
         @produce_graphviz_output = argv.flag?('graphviz', false)
         @produce_image_output = argv.flag?('image', false)
+        @list = argv.flag?('list', false)
         @use_podfile_targets = argv.flag?('use-podfile-targets', false)
         @ranksep = argv.option('ranksep', '0.75')
         @nodesep = argv.option('nodesep', '0.25')
         @filter_pattern = argv.option('filter-pattern', nil)
+        @summary = argv.flag?('summary', false)
         super
       end
 
@@ -71,7 +75,8 @@ module Pod
         end
         graphviz_image_output if @produce_image_output
         graphviz_dot_output if @produce_graphviz_output
-        yaml_output
+        yaml_output if @list
+        summary_output if @summary
       end
 
       def dependencies
@@ -205,6 +210,48 @@ module Pod
       def yaml_output
         UI.title 'Dependencies' do
           UI.puts YAMLHelper.convert(dependencies)
+        end
+      end
+
+      def summary_output
+        # Consolidate keys in dependencies
+        summary = Hash.new
+        UI.title 'Summary' do
+          dependencies.each do |node|
+            if node.is_a?(Hash)
+              summary[node.keys[0]] = {"dependencies" => node[node.keys[0]].length}
+            else
+              summary[node] = {"dependencies" => 0}
+            end
+          end
+
+          dependencies.each do |node|
+            if node.is_a?(Hash)
+              node[node.keys[0]].each do |dependent|
+                summary.keys.each do |pod|
+                  if pod.include? dependent
+                    if summary[pod].key? "dependents"
+                      summary[pod]["dependents"] += 1
+                    else
+                      summary[pod]["dependents"] = 1
+                    end
+                  end
+                end
+              end
+            end
+          end
+
+          summary.each do |k, v|
+            if !v.key? "dependents"
+              v["dependents"] = 0
+            end
+          end
+
+          puts   "POD".ljust(60) + "NUMBER OF DEPENDENCIES".ljust(25) + "NUMBER OF DEPENDENTS"
+          puts
+          summary.sort_by {|k,v| [v["dependencies"], -v["dependents"]]}.each do |key, value|
+            puts   key.ljust(60) + value["dependencies"].to_s.ljust(25) + value["dependents"].to_s
+          end
         end
       end
 

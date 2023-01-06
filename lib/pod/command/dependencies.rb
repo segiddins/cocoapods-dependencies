@@ -213,7 +213,7 @@ module Pod
       end
 
       def graphviz_dot_output
-        graphviz_data.output( :dot => "#{output_file_basename}.gv")
+        graphviz_data.output( :conan => "#{output_file_basename}.gv")
       end
 
     end

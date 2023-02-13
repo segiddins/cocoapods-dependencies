@@ -132,6 +132,7 @@ module Pod
         @graphviz ||= begin
           require 'graphviz'
           graph = GraphViz::new(output_file_basename, :type => :digraph, :ranksep => @ranksep, :nodesep => @nodesep, :splines => @splines)
+          graph.node["shape"] = "box"
 
           if @use_podfile_targets
             unless @podspec
